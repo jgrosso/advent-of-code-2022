@@ -1,0 +1,22 @@
+$ cd /
+$ ls
+100000000 foo
+dir a
+dir b
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ cd e
+$ ls
+3000 foo
+$ cd ..
+$ ls
