@@ -3,7 +3,7 @@
 (require (for-syntax racket)
          (for-syntax syntax/parse))
 
-(define-for-syntax enable-contracts? #t)
+(define-for-syntax enable-contracts? #f)
 
 (define-for-syntax (strip-contract-from stx)
   (syntax-parse stx

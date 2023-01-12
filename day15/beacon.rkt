@@ -10,20 +10,20 @@
                                (Sensor-closest-beacon sensor)))
 
 (define (Sensor-minimum-x-visible sensor)
-  (- (Sensor-range sensor)
-     (Position-x (Sensor-position sensor))))
+  (- (Position-x (Sensor-position sensor))
+     (Sensor-range sensor)))
 
 (define (Sensor-maximum-x-visible sensor)
-  (+ (Sensor-range sensor)
-     (Position-x (Sensor-position sensor))))
+  (+ (Position-x (Sensor-position sensor))
+     (Sensor-range sensor)))
 
 (define (Sensor-minimum-y-visible sensor)
-  (- (Sensor-range sensor)
-     (Position-y (Sensor-position sensor))))
+  (- (Position-y (Sensor-position sensor))
+     (Sensor-range sensor)))
 
 (define (Sensor-maximum-y-visible sensor)
-  (+ (Sensor-range sensor)
-     (Position-y (Sensor-position sensor))))
+  (+ (Position-y (Sensor-position sensor))
+     (Sensor-range sensor)))
 
 (define (Sensor-can-see? sensor position)
   (<= (Position-manhattan-distance (Sensor-position sensor) position)
@@ -57,14 +57,6 @@
                                     (Sensor-closest-beacon sensor)))
                 sensors)])
     (or beacon? (not visible?))))
-
-(define (Sensor-visible-positions sensor)
-  (apply set
-         (for*/list ([x (inclusive-range (Sensor-minimum-x-visible sensor)
-                                         (Sensor-maximum-x-visible sensor))]
-                     [y (inclusive-range (Sensor-minimum-y-visible sensor)
-                                         (Sensor-maximum-y-visible sensor))])
-           (Position x y))))
 
 (provide/c
  (contract-out
@@ -100,10 +92,5 @@
                        (>=/c (Sensor-minimum-y-visible sensor)))])]
   [Sensor-can-see?
    (-> Sensor? Position? boolean?)]
-  [Sensor-visible-positions
-   (->i ([sensor Sensor?])
-        [result (sensor)
-                (set/c (and/c Position?
-                              (λ (position) (Sensor-can-see? sensor position))))])]
   [string->Sensor
    (-> string? Sensor?)]))
