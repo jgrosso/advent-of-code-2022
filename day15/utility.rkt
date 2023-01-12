@@ -1,5 +1,13 @@
 #lang racket
 
+(require "contract.rkt")
+
+(define (flip f)
+  (λ (y x) (f x y)))
+
+(define (member-of/c xs)
+  (λ (x) (member x xs)))
+
 (define (total ns)
   (foldl + 0 ns))
 
@@ -24,6 +32,12 @@
       (cons (take xs n)
             (chunk (drop xs n) n))))
 
+(define (pairs xs)
+  (if (< (length xs) 2)
+      null
+      (cons (take xs 2)
+            (pairs (cdr xs)))))
+
 (define (lines text)
   (string-split text "\n" #:repeat? #t))
 
@@ -47,8 +61,18 @@
   (and/c exact-integer?
          (λ (n) (zero? (modulo n m)))))
 
-(provide
+(define (fixed-point-from f init)
+  (let ([new (f init)])
+    (if (equal? init new)
+        new
+        (fixed-point-from f new))))
+
+(provide/c
  (contract-out
+  [member-of/c
+   (-> list? contract?)]
+  [flip
+   (-> (-> any/c any/c any/c) (-> any/c any/c any/c))]
   [total
    (-> (listof number?) number?)]
   [product
@@ -62,15 +86,25 @@
   [scanl
    (-> (-> any/c any/c any/c) any/c list? list?)]
   [chunk
-   (->i ([xs (n) (and/c list?
-                        (property/c length (divisible/c n)))]
+   (->i ([xs (n)
+             (and/c list?
+                    (property/c length (divisible/c n)))]
          [n exact-nonnegative-integer?])
-        [result (xs n) (listof (and/c list?
-                                      (property/c length (=/c n))))])]
+        [result (xs n)
+                (and/c (listof (and/c list?
+                                      (property/c length (=/c n))))
+                       (property/c flatten (equal/c xs)))])]
+  [pairs
+   (->i ([xs list?])
+        [result (xs)
+                (and/c (listof (and/c (listof (member-of/c xs))
+                                      (property/c length (=/c 2))))
+                       (property/c length (=/c (sub1 (length xs)))))])]
   [divisible/c (-> exact-nonnegative-integer? contract?)]
   [lines
-   (-> string? (listof (and/c string?
-                              (not/c (λ (s) (string-contains? s "\n"))))))]
+   (-> string?
+       (listof (and/c string?
+                      (not/c (λ (s) (string-contains? s "\n"))))))]
   [sorted?
    (->* (list?) () #:rest any/c boolean?)]
   [sorted/c
@@ -91,4 +125,6 @@
         [result (xs)
                 (and/c (listof (cons/c exact-nonnegative-integer? any/c))
                        (property/c (curry map car) (equal/c (indices xs)))
-                       (property/c (curry map cdr) (equal/c xs)))])]))
+                       (property/c (curry map cdr) (equal/c xs)))])]
+  [fixed-point-from
+   (-> (-> any/c any/c) any/c any/c)]))

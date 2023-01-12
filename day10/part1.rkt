@@ -1,12 +1,5 @@
 #lang racket
 
-(define (scanl f initial xs)
-  (reverse (foldl (λ (x acc)
-                    (let ([new-value (f x (car acc))])
-                      (cons new-value acc)))
-                  (list initial)
-                  xs)))
-
 (define (read-from-string input-string)
   (read (open-input-string input-string)))
 
