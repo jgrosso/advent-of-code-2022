@@ -122,14 +122,16 @@
   [Grid/c
    (-> flat-contract? contract?)]
   [matrix->Grid
-   (-> (matrix-of/c any/c) (Grid/c any/c))]
+   (->i ([matrix matrix?])
+        [result (matrix) (Grid/c (member-of/c (flatten matrix)))])]
   [Grid-member/c
    (-> (Grid/c any/c) contract?)]
   [Grid-Position/c
    (-> (Grid/c any/c) contract?)]
   [Grid->string
    (->i ([grid (Grid/c any/c)])
-        ([element->string (-> any/c string?)])
+        ([element->string (grid)
+                          (-> (Grid-member/c grid) string?)])
         [result string?])]
   [inside-Grid/c
    (-> (Grid/c any/c) contract?)]
@@ -152,18 +154,22 @@
   [Grid-at
    (->i ([grid (Grid/c any/c)]
          [position (grid) (Grid-Position/c grid)])
-        [result any/c])]
+        [result (grid) (Grid-member/c grid)])]
   [Grid-member?
    (-> (Grid/c any/c) any/c boolean?)]
   [Grid-map
-   (->* ((-> any/c any/c))
-        #:rest (listof (Grid/c any/c))
-        (Grid/c any/c))]
+   (parametric->/c
+    [A B]
+    (->* ((-> A ... B))
+         #:rest (listof (Grid/c A))
+         (Grid/c B)))]
   [Grid-fold
-   (->i ([grid (Grid/c any/c)]
-         [proc (grid) (-> (Grid-member/c grid) any/c any/c)]
-         [init any/c])
-        [result any/c])]
+   (parametric->/c
+    [A B]
+    (->i ([grid (Grid/c B)]
+          [proc (grid) (-> (Grid-member/c grid) A A)]
+          [init B])
+         [result A]))]
   [Grid-and
    (-> (Grid/c boolean?) boolean?)]
   [Grid-or
@@ -171,23 +177,31 @@
   [Grid-sum
    (-> (Grid/c number?) number?)]
   [Grid-all
-   (-> (Grid/c any/c) (-> any/c boolean?) boolean?)]
-  [Grid-any
-   (-> (Grid/c any/c) (-> any/c boolean?) boolean?)]
-  [Grid-set-at
    (->i ([grid (Grid/c any/c)]
-         [position (grid) (Grid-Position/c grid)]
-         [new-value any/c])
-        [result (position new-value)
-                (and/c (Grid/c any/c)
-                       (λ (grid) (equal? (Grid-at grid position) new-value)))])]
+         [proc (grid) (-> (Grid-member/c grid) boolean?)])
+        [result boolean?])]
+  [Grid-any
+   (->i ([grid (Grid/c any/c)]
+         [proc (grid) (-> (Grid-member/c grid) boolean?)])
+        [result boolean?])]
+  [Grid-set-at
+   (parametric->/c
+    [A B]
+    (->i ([grid (Grid/c A)]
+                          [position (grid) (Grid-Position/c grid)]
+                          [new-value B])
+         [result (position new-value)
+                 (and/c (Grid/c (or/c A B))
+                        (λ (grid) (equal? (Grid-at grid position) new-value)))]))]
   [Grid-merge
-   (->i ([grid1 (Grid/c any/c)]
-         [grid2 (Grid/c any/c)]
-         [choose (-> any/c any/c boolean?)])
-        [result (grid1 grid2)
-                (Grid/c (or/c (Grid-member/c grid1)
-                              (Grid-member/c grid2)))])]
+   (parametric->/c
+    [A B]
+    (->i ([grid1 (Grid/c A)]
+          [grid2 (Grid/c B)]
+          [choose (-> A B boolean?)])
+         [result (grid1 grid2)
+                 (Grid/c (or/c (Grid-member/c grid1)
+                               (Grid-member/c grid2)))]))]
   [Grid-indices
    (->i ([grid (Grid/c any/c)])
         [result (grid) (Grid/c (Grid-Position/c grid))])]

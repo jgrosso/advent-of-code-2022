@@ -72,7 +72,9 @@
   [member-of/c
    (-> list? contract?)]
   [flip
-   (-> (-> any/c any/c any/c) (-> any/c any/c any/c))]
+   (parametric->/c
+    [A B C]
+    (-> (-> A B C) (-> B A C)))]
   [total
    (-> (listof number?) number?)]
   [product
@@ -84,14 +86,16 @@
                 (and/c (listof (equal/c x))
                        (property/c length (=/c n)))])]
   [scanl
-   (-> (-> any/c any/c any/c) any/c list? list?)]
+   (parametric->/c
+    [A B]
+    (-> (-> B A A) A (listof B) (listof A)))]
   [chunk
    (->i ([xs (n)
              (and/c list?
                     (property/c length (divisible/c n)))]
          [n exact-nonnegative-integer?])
         [result (xs n)
-                (and/c (listof (and/c list?
+                (and/c (listof (and/c (listof (member-of/c xs))
                                       (property/c length (=/c n))))
                        (property/c flatten (equal/c xs)))])]
   [pairs
@@ -106,13 +110,13 @@
        (listof (and/c string?
                       (not/c (λ (s) (string-contains? s "\n"))))))]
   [sorted?
-   (->* (list?) () #:rest any/c boolean?)]
+   (->* (list?) () #:rest list? boolean?)]
   [sorted/c
-   (->* () () #:rest any/c contract?)]
+   (->* () () #:rest list? contract?)]
   [equal/c
    (-> any/c contract?)]
   [indices
-   (->i ([xs (listof any/c)])
+   (->i ([xs list?])
         [result (xs)
                 (and/c (listof exact-nonnegative-integer?)
                        (sorted/c <)
@@ -121,10 +125,12 @@
                        (property/c min (=/c 0))
                        (property/c max (=/c (sub1 (length xs)))))])]
   [enumerate
-   (->i ([xs (listof any/c)])
+   (->i ([xs list?])
         [result (xs)
-                (and/c (listof (cons/c exact-nonnegative-integer? any/c))
+                (and/c (listof (cons/c exact-nonnegative-integer? (member-of/c xs)))
                        (property/c (curry map car) (equal/c (indices xs)))
                        (property/c (curry map cdr) (equal/c xs)))])]
   [fixed-point-from
-   (-> (-> any/c any/c) any/c any/c)]))
+   (parametric->/c
+    [A]
+    (-> (-> A A) A A))]))
